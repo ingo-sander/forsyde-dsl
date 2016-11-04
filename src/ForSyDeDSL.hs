@@ -21,8 +21,23 @@ instance Num Expr where
 
 data Signal = NullS
             | CONS Expr Signal
+            | MAP (Expr -> Expr) Signal
+            | ZIPWITH (Expr -> Expr -> Expr) Signal Signal
+            | DELAY Expr Signal
+              
 
-     
+evalSignal NullS = []
+evalSignal (CONS x xs) = eval x : evalSignal xs
+evalSignal (MAP f NullS) = [] 
+evalSignal (MAP f (CONS x xs)) = eval (f x) : evalSignal (MAP f xs)
+evalSignal (ZIPWITH f NullS _    ) = []
+evalSignal (ZIPWITH f _     NullS) = []
+evalSignal (ZIPWITH f (CONS x xs) (CONS y ys)) 
+           = eval (f x y) : evalSignal (ZIPWITH f xs ys)
+evalSignal (DELAY x xs) = eval x : evalSignal xs 
+
+
+
 {-
 data Signal a = Sig [a]
               | MapSY (a -> a) (Signal a) 
@@ -41,6 +56,7 @@ eval (NEG x)   = -eval (x)
 eval (ABS x)   = abs (eval x)
 eval (SIGNUM x) = signum (eval x)
 eval (IFELSE p x y) = if (eval p == 1) then (eval x) else (eval y)     
+
 
 
 
